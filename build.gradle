@@ -1,0 +1,74 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+     classpath "mysql:mysql-connector-java:5.1.34"
+     classpath 'com.dbdeploy:dbdeploy-ant:3.0M3'
+     classpath 'net.saliman:gradle-properties-plugin:1.4.2'
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'net.saliman.properties'
+
+project.ext {
+  dbDriver = 'com.mysql.jdbc.Driver'
+  dbUrl = 'jdbc:mysql://localhost/db_depl'
+  dbUsername = 'db_depl'
+  dbPassword = 'db_depl'
+  dbType = 'mysql'
+  dbDir = 'profiles/mysql_local'
+  dbms = 'mysql'
+  undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
+  changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
+}
+
+task updateDatabase << {
+  ant.taskdef(name: 'dbdeploy', 
+              classname: 'com.dbdeploy.AntTarget', 
+              classpath: project.buildscript.configurations.classpath.asPath)
+
+
+  ant.dbdeploy(driver: dbDriver,
+    url: dbUrl,
+    userid: dbUsername, 
+    password: dbPassword, 
+    dir: dbDir,
+    dbms: dbms,
+    undooutputfile: undooutputfile)
+}
+
+
+task createChangelogTable << {
+  ant.sql(driver: dbDriver, 
+          url: dbUrl, 
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+
+      fileset(file: changelogFile)
+  }
+}
+
+
+task undoLastChange << {
+  ant.sql(driver: dbDriver,
+          url: dbUrl,
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: undooutputfile)
+  }
+}
+
+task printBuildScriptClasspath << {
+println project.buildscript.configurations.classpath.asPath
+}
+
+task hello << {
+    String greeting = 'hello from Ant'
+    ant.echo(message: greeting)
+}

@@ -1,0 +1,1 @@
+CREATE TABLE test2 (id BIGINT NOT NULL);
