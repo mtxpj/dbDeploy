@@ -5,24 +5,37 @@ buildscript {
     dependencies {
      classpath "mysql:mysql-connector-java:5.1.34"
      classpath 'com.dbdeploy:dbdeploy-ant:3.0M3'
-     classpath 'net.saliman:gradle-properties-plugin:1.4.2'
     }
 }
 
 apply plugin: 'java'
-apply plugin: 'net.saliman.properties'
 
 project.ext {
+  db = 'mysql'
+  file = 'none'
+  mysqllocal = 'gradle-mysqllocal.properties'
+  sqlserverlocal = 'gradle-sqlserverlocal.properties'
   dbDriver = 'com.mysql.jdbc.Driver'
   dbUrl = 'jdbc:mysql://localhost/db_depl'
   dbUsername = 'db_depl'
   dbPassword = 'db_depl'
-  dbType = 'mysql'
   dbDir = 'profiles/mysql_local'
   dbms = 'mysql'
   undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
   changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
 }
+
+task testt << {
+  if (db=="mysqllocal") {
+    file == 'mysqllocal'
+  }
+  if (db=="sqlserverlocal") {
+    file = sqlserverlocal
+  }
+  println db +" "+ file
+}
+
+
 
 task updateDatabase << {
   ant.taskdef(name: 'dbdeploy', 
@@ -63,6 +76,8 @@ task undoLastChange << {
       fileset(file: undooutputfile)
   }
 }
+
+//===============================================================
 
 task printBuildScriptClasspath << {
 println project.buildscript.configurations.classpath.asPath

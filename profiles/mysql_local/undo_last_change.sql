@@ -1,0 +1,26 @@
+
+-- START UNDO OF CHANGE SCRIPT #2: 002.sql
+
+START TRANSACTION;
+
+
+
+DELETE FROM changelog WHERE change_number = 2;
+
+COMMIT;
+
+-- END UNDO OF CHANGE SCRIPT #2: 002.sql
+
+
+-- START UNDO OF CHANGE SCRIPT #1: 001.sql
+
+START TRANSACTION;
+
+
+
+DELETE FROM changelog WHERE change_number = 1;
+
+COMMIT;
+
+-- END UNDO OF CHANGE SCRIPT #1: 001.sql
+
