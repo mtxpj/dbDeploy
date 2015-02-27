@@ -11,31 +11,60 @@ buildscript {
 apply plugin: 'java'
 
 project.ext {
-  db = 'mysql'
-  file = 'none'
-  mysqllocal = 'gradle-mysqllocal.properties'
-  sqlserverlocal = 'gradle-sqlserverlocal.properties'
+  mysqllocal = 'profiles/mysqllocal.properties'
+  mssqllocal = 'profiles/mssqllocal.properties'
+
   dbDriver = 'com.mysql.jdbc.Driver'
   dbUrl = 'jdbc:mysql://localhost/db_depl'
   dbUsername = 'db_depl'
   dbPassword = 'db_depl'
-  dbDir = 'profiles/mysql_local'
-  dbms = 'mysql'
+  dbDir = 'profiles'
+  dbms = 'dbms'
   undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
   changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
+
+  wrongParameter = 'ERROR: Provide correct parameter.'
 }
 
-task testt << {
-  if (db=="mysqllocal") {
-    file == 'mysqllocal'
-  }
-  if (db=="sqlserverlocal") {
-    file = sqlserverlocal
-  }
-  println db +" "+ file
+// Matt custom tasks:
+task updateDb <<{
+  tasks.chooseProfile.execute()
+  tasks.updateDatabase.execute()
 }
 
+task createChangelog <<{
+  tasks.chooseProfile.execute()
+  tasks.createChangelogTable.execute()
+}
 
+task undo << {
+  tasks.chooseProfile.execute()
+  tasks.undoLastChange.execute()
+}
+
+task chooseProfile << {
+  if (db=="mysql") {
+    project.ext.set("file", mysqllocal)
+    tasks.loadProperties.execute()
+  println "Profile: " +db +"\nProperty file: "+ file
+  } else if (db=="mssql") {
+    project.ext.set("file", mssqllocal)
+    println "> Profile: " +db +"\n> Property file: "+ file
+    tasks.loadProperties.execute()
+  } else {
+    println wrongParameter
+  }
+}
+
+task loadProperties << {
+  Properties props = new Properties() 
+  props.load(new FileInputStream(project.ext.file)) 
+  println "> Loaded properties:"
+   props.each {
+     project.ext[it.key] = it.value
+     println it.key + ":                " + it.value
+   }
+ }
 
 task updateDatabase << {
   ant.taskdef(name: 'dbdeploy', 
