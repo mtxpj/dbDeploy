@@ -5,6 +5,7 @@ buildscript {
     dependencies {
      classpath "mysql:mysql-connector-java:5.1.34"
      classpath 'com.dbdeploy:dbdeploy-ant:3.0M3'
+     classpath 'net.sourceforge.jtds:jtds:1.3.1' // to verify
     }
 }
 
@@ -31,7 +32,7 @@ def PARTIAL_GROUP = 'DbDeploy Partial'
 def ANT_GROUP = 'Ant Original Group'
 def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update as value for key "db".'
 
-// Matt custom tasks:
+// working custom tasks:
 task updateDb <<{
   tasks.chooseProfile.execute()
   tasks.updateDatabase.execute()
@@ -51,6 +52,7 @@ task undo << {
 }
 undo.group = DB_GROUP
 
+// tasks methods
 task chooseProfile << {
   if (db=="mysql") {
     project.ext.set("file", mysqllocal)
@@ -77,6 +79,7 @@ task loadProperties << {
  }
 loadProperties.group = PARTIAL_GROUP
 
+// ant tasks
 task updateDatabase << {
   ant.taskdef(name: 'dbdeploy', 
               classname: 'com.dbdeploy.AntTarget', 
@@ -118,8 +121,12 @@ task undoLastChange << {
 }
 undoLastChange.group = ANT_GROUP
 
-//===============================================================
+// wrapper
+task wrapper(type: Wrapper) {
+    gradleVersion = '2.3'
+}
 
+// helping tasks
 task printBuildScriptClasspath << {
 println project.buildscript.configurations.classpath.asPath
 }
