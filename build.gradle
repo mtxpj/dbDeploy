@@ -23,14 +23,13 @@ project.ext {
   dbms = 'dbms'
   undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
   changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
-
-  wrongParameter = 'ERROR: Provide correct parameter.'
 }
 
 def DB_GROUP = 'Actual DbDeploy Group'
 def PARTIAL_GROUP = 'DbDeploy Partial'
 def ANT_GROUP = 'Ant Original Group'
 def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update as value for key "db".'
+def WRONG_PARAMETER = 'ERROR: Provide correct parameter.'
 
 // working custom tasks:
 task updateDb <<{
@@ -63,7 +62,7 @@ task chooseProfile << {
     println "> Profile: " +db +"\n> Property file: "+ file
     tasks.loadProperties.execute()
   } else {
-    println wrongParameter
+    println WRONG_PARAMETER
   }
 }
 chooseProfile.group = PARTIAL_GROUP
