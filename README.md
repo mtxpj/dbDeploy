@@ -2,15 +2,10 @@
 gradle database update version control
 
 1. Create '[name].profile' file in 'profiles' folder containing parameters for following keys:
-
 dbDriver, dbUrl, dbUsername, dbPassword, dbDir, dbms, undooutputfile, changelogFile.
-
 (don't put them in any quotation marks).
-
 2. Add property pointing to your 'profiles/[name].profile' file in build.gradle, 'project.ext' (i.e. "mysqllocal = 'profiles/mysqllocal.properties'", "[name] = 'profiles/[name].properties'").
-
 3. Add 'if' block to build.gradle in 'chooseProfile' task setting location of your property file as value to the key 'file'.
-
 4. Add profiles/mysql_local/create_changelog_table.sql file.
 5. Run app:
 	b. gradle -Pdb=[name] createChangelog - this task will create changelog sql table in your profile folder.
