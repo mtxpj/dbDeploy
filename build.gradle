@@ -6,10 +6,19 @@ buildscript {
      classpath "mysql:mysql-connector-java:5.1.34"
      classpath 'com.dbdeploy:dbdeploy-ant:3.0M3'
      classpath 'net.sourceforge.jtds:jtds:1.3.1' // to verify
+     if (gradle.gradleVersion.split("\\.")[0].toInteger() >= 2) {
+            classpath 'org.apache.ivy:ivy:2.3.0'
+        }
     }
 }
 
+plugins {
+    id "de.undercouch.download" version "1.2"
+}
+
 apply plugin: 'java'
+
+import de.undercouch.gradle.tasks.download.Download
 
 project.ext {
   mysqllocal = 'profiles/mysqllocal.properties'
@@ -21,17 +30,20 @@ project.ext {
   dbPassword = 'db_depl'
   dbDir = 'profiles'
   dbms = 'dbms'
+  patchUrl = 'http://central.maven.org/maven2/de/undercouch/gradle-download-task/1.0/'
+  
+  patchDir = 'profiles/mysql_local/' //cerate folder first
   undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
   changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
 }
 
-def DB_GROUP = 'Actual DbDeploy Group'
-def PARTIAL_GROUP = 'DbDeploy Partial'
+def DB_GROUP = 'DbDeploy GROUP TASKS'
+def PARTIAL_GROUP = 'DbDeploy Partial Tasks'
 def ANT_GROUP = 'Ant Original Group'
 def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update as value for key "db".'
 def WRONG_PARAMETER = 'ERROR: Provide correct parameter.'
 
-// working custom tasks:
+// database profiled tasks:
 task updateDb <<{
   tasks.chooseProfile.execute()
   tasks.updateDatabase.execute()
@@ -51,7 +63,13 @@ task undo << {
 }
 undo.group = DB_GROUP
 
-// tasks methods
+task downloadPatches << {
+  tasks.chooseProfile.execute()
+  tasks.downloadPatchDirectory.execute()
+}
+downloadPatches.group = DB_GROUP
+
+// database tasks methods
 task chooseProfile << {
   if (db=="mysql") {
     project.ext.set("file", mysqllocal)
@@ -77,6 +95,17 @@ task loadProperties << {
    }
  }
 loadProperties.group = PARTIAL_GROUP
+
+task downloadPatchDirectory {
+     def url = patchUrl
+     def urlLister = new org.apache.ivy.util.url.ApacheURLLister()
+     def files = urlLister.listFiles(new URL(url))
+     download {
+        src files
+        dest patchDir
+     }
+ }
+ downloadPatchDirectory.group = PARTIAL_GROUP
 
 // ant tasks
 task updateDatabase << {
@@ -128,9 +157,4 @@ task wrapper(type: Wrapper) {
 // helping tasks
 task printBuildScriptClasspath << {
 println project.buildscript.configurations.classpath.asPath
-}
-
-task hello << {
-    String greeting = 'hello from Ant'
-    ant.echo(message: greeting)
 }
