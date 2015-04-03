@@ -52,14 +52,14 @@ chooseProfile.group = PARTIAL_GROUP
 * restoredumpfromfile = 'profiles/[name]/`restore_from_dump_file.sql`'
 
 5. Run app:
-+ `gradle -Pdb=[name] createDb` - this task will create database `dbName` in `dbUrl`.
++ `gradle -Pdb=[name] createDb` - this task will create database `dbName` in `dbUrl` & run `createChangelog`.
 + `gradle -Pdb=[name] createChangelog` - this task will create changelog sql table defined in `create_changelog_table.sql` in `dbName` database.
 + `gradle -Pdb=[name] downloadPatches` - this task downloads all files from `patchUrl` to `dbDir` folder.
 + `gradle -Pdb=[name] updateDb` - this task will execute not logged before updates from `dbDir` folder.
 + `gradle -Pdb=[name] undo` - this task will turn `dbName` to state from previous run of `updateDb` task.
 + `gradle -Pdb=[name] dropDb` - this task will delete `dbName` database.
 + `gradle -Pdb=[name] dumpDb` - this task will create database dump file.
-+ `gradle -Pdb=[name] recreateDb` - this task will `DROP`, `CREATE` database.
++ `gradle -Pdb=[name] recreateDb` - this task will `dropDb` & `createDb`.
 + `gradle -Pdb=[name] restoreDump` - this task will  `recreateAndUpdateDb`, and restore `dbName` database from `DUMP` file.
 
 __All statements should be in .sql files starting from 001.sql, 002.sql,...__
