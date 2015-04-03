@@ -1,0 +1,5 @@
+DROP DATABASE IF EXISTS db_depl;
+
+CREATE DATABASE db_depl DEFAULT CHARACTER SET utf8 DEFAULT COLLATE utf8_polish_ci;
+
+USE db_depl;

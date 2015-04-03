@@ -1,0 +1,1 @@
+mysql -u db_depl -pdb_depl db_depl < db_depl_dumpfile.sql

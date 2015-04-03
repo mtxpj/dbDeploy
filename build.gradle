@@ -6,6 +6,7 @@ buildscript {
      classpath "mysql:mysql-connector-java:5.1.34"
      classpath 'com.dbdeploy:dbdeploy-ant:3.0M3'
      classpath 'net.sourceforge.jtds:jtds:1.3.1' // to verify
+     // downloadPatchDirectory:
      if (gradle.gradleVersion.split("\\.")[0].toInteger() >= 2) {
             classpath 'org.apache.ivy:ivy:2.3.0'
         }
@@ -25,49 +26,103 @@ project.ext {
   mssqllocal = 'profiles/mssqllocal.properties'
 
   dbDriver = 'com.mysql.jdbc.Driver'
-  dbUrl = 'jdbc:mysql://localhost/db_depl'
+  dbUrl = 'jdbc:mysql://localhost/'
+  dbName = 'db_depl'
   dbUsername = 'db_depl'
   dbPassword = 'db_depl'
-  dbDir = 'profiles'
+  dbDir = 'profiles/mysql_local/patches/'
   dbms = 'dbms'
   patchUrl = 'http://central.maven.org/maven2/de/undercouch/gradle-download-task/1.0/'
   
-  patchDir = 'profiles/mysql_local/' //cerate folder first
+  useDbFile = 'profiles/mysql_local/use_database.sql'
   undooutputfile = 'profiles/mysql_local/undo_last_change.sql'
   changelogFile = 'profiles/mysql_local/create_changelog_table.sql'
+  dropdatabasefile = 'profiles/mysql_local/drop_database.sql'
+  createdatabasefile = 'profiles/mysql_local/create_database.sql'
+  dumpdatabasetofile = 'profiles/mysql_local/dump_to_file.sql'
+  restoredumpfromfile = 'profiles/mysql_local/restore_from_dump_file.sql'
 }
 
-def DB_GROUP = 'DbDeploy GROUP TASKS'
-def PARTIAL_GROUP = 'DbDeploy Partial Tasks'
-def ANT_GROUP = 'Ant Original Group'
-def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update as value for key "db".'
+def DB_GROUP = '>> DbDeploy GROUP <<'
+def PARTIAL_GROUP = 'DbDeploy Partial'
+def ANT_GROUP = 'Ant Group'
+def CREATE_CHANGELOG_DESCRIPTION = 'Give parameter of database you want to create changelog in, as value for key "db" (db=[name]).'
+def CREATE_DB_DESCRIPTION = 'Give parameter of database you want to create, as value for key "db" (db=[name]).'
+def DOWNLOAD_PATCHES_DESCRIPTION = 'Give parameter of database you want to download patches folder for, as value for key "db" (db=[name]).'
+def DROP_DB_DESCRIPTION = 'Give parameter of database you want to drop as value for key "db" (db=[name]).'
+def DUMP_DB_DESCRIPTION = 'Give parameter of database you want to dump to file as value for key "db" (db=[name]).'
+def UNDO_DESCRIPTION = 'Give parameter of database you want to turn to previous state as value for key "db" (db=[name]).'
+def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update, as value for key "db" (db=[name]).'
+def RESTORE_DB_DESCRIPTION = 'Give parameter of database you want to restore from dump file, as value for key "db" (db=[name]).'
 def WRONG_PARAMETER = 'ERROR: Provide correct parameter.'
-
 // database profiled tasks:
 task updateDb <<{
   tasks.chooseProfile.execute()
+  tasks.useDatabase.execute()
   tasks.updateDatabase.execute()
+
 }
 updateDb.group = DB_GROUP
 updateDb.description = UPDATE_DB_DESCRIPTION
 
 task createChangelog <<{
   tasks.chooseProfile.execute()
+  tasks.useDatabase.execute()
   tasks.createChangelogTable.execute()
 }
 createChangelog.group = DB_GROUP
+createChangelog.description = CREATE_CHANGELOG_DESCRIPTION
 
-task undo << {
+task createDb << {
   tasks.chooseProfile.execute()
-  tasks.undoLastChange.execute()
+  tasks.createDatabase.execute()
 }
-undo.group = DB_GROUP
+createDb.group = DB_GROUP
+createDb.description = CREATE_DB_DESCRIPTION
 
 task downloadPatches << {
   tasks.chooseProfile.execute()
   tasks.downloadPatchDirectory.execute()
 }
 downloadPatches.group = DB_GROUP
+downloadPatches.description = DOWNLOAD_PATCHES_DESCRIPTION
+
+task dropDb << {
+  tasks.chooseProfile.execute()
+  tasks.dropDatabase.execute()
+}
+dropDb.group = DB_GROUP
+dropDb.description = DROP_DB_DESCRIPTION
+
+task dumpDb << {
+  tasks.chooseProfile.execute()
+  tasks.useDatabase.execute()
+  tasks.dumpDatabase.execute()
+}
+dumpDb.group = DB_GROUP
+dumpDb.description = DUMP_DB_DESCRIPTION
+
+task restoreDump << {
+  tasks.dropDb.execute()
+  tasks.createDb.execute()
+  tasks.useDatabase.execute()
+  tasks.restoredumpfromfile.execute()
+}
+restoreDump.group = DB_GROUP
+restoreDump.description = RESTORE_DB_DESCRIPTION
+
+task recreateAndUpdateDb << {
+  tasks.dropDb.execute()
+  tasks.createDb.execute()
+  tasks.updateDb.execute()
+}
+
+task undo << {
+  tasks.chooseProfile.execute()
+  tasks.undoLastChange.execute()
+}
+undo.group = DB_GROUP
+undo.description = UNDO_DESCRIPTION
 
 // database tasks methods
 task chooseProfile << {
@@ -96,26 +151,36 @@ task loadProperties << {
  }
 loadProperties.group = PARTIAL_GROUP
 
-task downloadPatchDirectory {
+task downloadPatchDirectory << {
      def url = patchUrl
      def urlLister = new org.apache.ivy.util.url.ApacheURLLister()
      def files = urlLister.listFiles(new URL(url))
      download {
         src files
-        dest patchDir
+        dest dbDir
      }
  }
  downloadPatchDirectory.group = PARTIAL_GROUP
 
 // ant tasks
+task useDatabase << {
+  ant.sql(driver: dbDriver, 
+          url: dbUrl + dbName, 
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: useDbFile)
+  }
+}
+useDatabase.group = ANT_GROUP
+
 task updateDatabase << {
   ant.taskdef(name: 'dbdeploy', 
               classname: 'com.dbdeploy.AntTarget', 
               classpath: project.buildscript.configurations.classpath.asPath)
-
-
   ant.dbdeploy(driver: dbDriver,
-    url: dbUrl,
+    url: dbUrl + dbName,
     userid: dbUsername, 
     password: dbPassword, 
     dir: dbDir,
@@ -126,12 +191,11 @@ updateDatabase.group = ANT_GROUP
 
 task createChangelogTable << {
   ant.sql(driver: dbDriver, 
-          url: dbUrl, 
+          url: dbUrl + dbName, 
           userid: dbUsername,
           password: dbPassword,
           encoding: 'UTF-8',
           classpath: project.buildscript.configurations.classpath.asPath) {
-
       fileset(file: changelogFile)
   }
 }
@@ -139,7 +203,7 @@ createChangelogTable.group = ANT_GROUP
 
 task undoLastChange << {
   ant.sql(driver: dbDriver,
-          url: dbUrl,
+          url: dbUrl + dbName,
           userid: dbUsername,
           password: dbPassword,
           encoding: 'UTF-8',
@@ -149,6 +213,53 @@ task undoLastChange << {
 }
 undoLastChange.group = ANT_GROUP
 
+task dropDatabase << {
+ ant.sql(driver: dbDriver,
+          url: dbUrl + dbName,
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: dropdatabasefile)
+  }
+}
+dropDatabase.group = ANT_GROUP
+
+task createDatabase << {
+ ant.sql(driver: dbDriver,
+          url: dbUrl,
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: createdatabasefile)
+  }
+}
+createDatabase.group = ANT_GROUP
+
+task dumpDatabase << {
+  ant.sql(driver: dbDriver,
+          url: dbUrl,
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: dumpdatabasetofile)
+  }
+}
+dumpDatabase.group = ANT_GROUP
+
+task restoreDumpDatabase << {
+  ant.sql(driver: dbDriver,
+          url: dbUrl,
+          userid: dbUsername,
+          password: dbPassword,
+          encoding: 'UTF-8',
+          classpath: project.buildscript.configurations.classpath.asPath) {
+      fileset(file: restoredumpfromfile)
+  }
+}
+restoreDumpDatabase.group = ANT_GROUP
 // wrapper
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
