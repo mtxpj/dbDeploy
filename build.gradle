@@ -55,12 +55,12 @@ def UNDO_DESCRIPTION = 'Give parameter of database you want to turn to previous 
 def UPDATE_DB_DESCRIPTION = 'Give parameter of database you want to update, as value for key "db" (db=[name]).'
 def RESTORE_DB_DESCRIPTION = 'Give parameter of database you want to restore from dump file, as value for key "db" (db=[name]).'
 def WRONG_PARAMETER = 'ERROR: Provide correct parameter.'
+
 // database profiled tasks:
 task updateDb <<{
   tasks.chooseProfile.execute()
   tasks.useDatabase.execute()
   tasks.updateDatabase.execute()
-
 }
 updateDb.group = DB_GROUP
 updateDb.description = UPDATE_DB_DESCRIPTION
@@ -76,6 +76,7 @@ createChangelog.description = CREATE_CHANGELOG_DESCRIPTION
 task createDb << {
   tasks.chooseProfile.execute()
   tasks.createDatabase.execute()
+  tasks.createChangelog.execute()
 }
 createDb.group = DB_GROUP
 createDb.description = CREATE_DB_DESCRIPTION
@@ -103,18 +104,16 @@ dumpDb.group = DB_GROUP
 dumpDb.description = DUMP_DB_DESCRIPTION
 
 task restoreDump << {
-  tasks.dropDb.execute()
-  tasks.createDb.execute()
-  tasks.useDatabase.execute()
+  tasks.recreateAndUpdateDb.execute()
   tasks.restoredumpfromfile.execute()
 }
 restoreDump.group = DB_GROUP
 restoreDump.description = RESTORE_DB_DESCRIPTION
 
-task recreateAndUpdateDb << {
+task recreateDb << {
   tasks.dropDb.execute()
   tasks.createDb.execute()
-  tasks.updateDb.execute()
+  tasks.createChangelog.execute()
 }
 
 task undo << {
