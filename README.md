@@ -19,7 +19,8 @@ undooutputfile = profiles/[name]/undo_last_change.sql
 changelogFile = profiles/[name]/create_changelog_table.sql
 dropdatabasefile = profiles/[name]/drop_database.sql
 createdatabasefile = profiles/[name]/create_database.sql
-dumpdatabasetofile = 'profiles/[name]/dump_to_file.sql'
+dumpdatabasetofile = profiles/[name]/dump_to_file.sql
+restoredumpfromfile = profiles/[name]/restore_from_dump_file.sql
 ```
 (don't put them in any quotation marks).
 
@@ -49,6 +50,7 @@ chooseProfile.group = PARTIAL_GROUP
 * dropdatabasefile = 'profiles/[name]/`drop_database.sql`'
 * createdatabasefile = 'profiles/[name]/`create_database.sql`'
 * dumpdatabasetofile = 'profiles/[name]/`dump_to_file.sql`'
+* restoredumpfromfile = 'profiles/[name]/`restore_from_dump_file.sql`'
 
 5. Run app:
 + `gradle -Pdb=[name] createDb` - this task will create database `dbName` in `dbUrl`.
@@ -57,7 +59,9 @@ chooseProfile.group = PARTIAL_GROUP
 + `gradle -Pdb=[name] updateDb` - this task will execute not logged before updates from `dbDir` folder.
 + `gradle -Pdb=[name] undo` - this task will turn `dbName` to state from previous run of `updateDb` task.
 + `gradle -Pdb=[name] dropDb` - this task will delete `dbName` database.
++ `gradle -Pdb=[name] dumpDb` - this task will create database dump file.
 + `gradle -Pdb=[name] recreateAndUpdateDb` - this task will `DROP`, `CREATE` & `UPDATE` database.
++ `gradle -Pdb=[name] restoreDump` - this task will  `recreateAndUpdateDb`, and restore `dbName` database from `DUMP` file.
 
 __All statements should be in .sql files starting from 001.sql, 002.sql,...__
 
