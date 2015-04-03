@@ -22,7 +22,6 @@ createdatabasefile = profiles/[name]/create_database.sql
 dumpdatabasetofile = profiles/[name]/dump_to_file.sql
 restoredumpfromfile = profiles/[name]/restore_from_dump_file.sql
 ```
-(don't put them in any quotation marks).
 
 2. In `build.gradle` file __add property__ pointing to your `profiles/[name].profile` file:
 ```groovy
@@ -60,12 +59,12 @@ chooseProfile.group = PARTIAL_GROUP
 + `gradle -Pdb=[name] undo` - this task will turn `dbName` to state from previous run of `updateDb` task.
 + `gradle -Pdb=[name] dropDb` - this task will delete `dbName` database.
 + `gradle -Pdb=[name] dumpDb` - this task will create database dump file.
-+ `gradle -Pdb=[name] recreateAndUpdateDb` - this task will `DROP`, `CREATE` & `UPDATE` database.
++ `gradle -Pdb=[name] recreateDb` - this task will `DROP`, `CREATE` database.
 + `gradle -Pdb=[name] restoreDump` - this task will  `recreateAndUpdateDb`, and restore `dbName` database from `DUMP` file.
 
 __All statements should be in .sql files starting from 001.sql, 002.sql,...__
 
-## You can create and use your own tasks running sql files:
+## You can create and use your own tasks to run sql files:
 create `myFile.sql`
 put it in `profiles/[name]/` folder
 add parameter `myCommands = profiles/[name]/myFile.sql` in `/profiles/[name].profile` file
