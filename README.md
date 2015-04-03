@@ -19,6 +19,7 @@ undooutputfile = profiles/[name]/undo_last_change.sql
 changelogFile = profiles/[name]/create_changelog_table.sql
 dropdatabasefile = profiles/[name]/drop_database.sql
 createdatabasefile = profiles/[name]/create_database.sql
+dumpdatabasetofile = 'profiles/[name]/dump_to_file.sql'
 ```
 (don't put them in any quotation marks).
 
@@ -35,23 +36,19 @@ task chooseProfile << {
     project.ext.set("file", [name])
     tasks.loadProperties.execute()
   println "Profile: " +db +"\nProperty file: "+ file
-  } else if (db=="mssql") {
-    project.ext.set("file", mssqllocal)
-    println "> Profile: " +db +"\n> Property file: "+ file
-    tasks.loadProperties.execute()
-  } else {
-    println WRONG_PARAMETER
-  }
+  } else if
+  ...
 }
 chooseProfile.group = PARTIAL_GROUP
 ```
 4. Create files defined in `[name].properties`:
 
-* useDbFile = 'profiles/[name]/use_database.sql'
-* undooutputfile = 'profiles/[name]/undo_last_change.sql'
-* changelogFile = 'profiles/[name]/create_changelog_table.sql'
-* dropdatabasefile = 'profiles/[name]/drop_database.sql'
-* createdatabasefile = 'profiles/[name]/create_database.sql'
+* useDbFile = 'profiles/[name]/`use_database.sql`'
+* undooutputfile = 'profiles/[name]/`undo_last_change.sql`'
+* changelogFile = 'profiles/[name]/`create_changelog_table.sql`'
+* dropdatabasefile = 'profiles/[name]/`drop_database.sql`'
+* createdatabasefile = 'profiles/[name]/`create_database.sql`'
+* dumpdatabasetofile = 'profiles/[name]/`dump_to_file.sql`'
 
 5. Run app:
 + `gradle -Pdb=[name] createDb` - this task will create database `dbName` in `dbUrl`.
@@ -60,6 +57,7 @@ chooseProfile.group = PARTIAL_GROUP
 + `gradle -Pdb=[name] updateDb` - this task will execute not logged before updates from `dbDir` folder.
 + `gradle -Pdb=[name] undo` - this task will turn `dbName` to state from previous run of `updateDb` task.
 + `gradle -Pdb=[name] dropDb` - this task will delete `dbName` database.
++ `gradle -Pdb=[name] recreateAndUpdateDb` - this task will `DROP`, `CREATE` & `UPDATE` database.
 
 __All statements should be in .sql files starting from 001.sql, 002.sql,...__
 
