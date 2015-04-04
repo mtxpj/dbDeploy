@@ -24,6 +24,7 @@ import de.undercouch.gradle.tasks.download.Download
 project.ext {
   mysqllocal = 'profiles/mysqllocal.properties'
   mssqllocal = 'profiles/mssqllocal.properties'
+  forms = 'profiles/forms.properties'
 
   dbDriver = 'com.mysql.jdbc.Driver'
   dbUrl = 'jdbc:mysql://localhost/'
@@ -129,6 +130,10 @@ task chooseProfile << {
     project.ext.set("file", mysqllocal)
     tasks.loadProperties.execute()
   println "Profile: " +db +"\nProperty file: "+ file
+  } else if (db=="forms") {
+    project.ext.set("file", forms)
+    println "> Profile: " +db +"\n> Property file: "+ file
+    tasks.loadProperties.execute()
   } else if (db=="mssql") {
     project.ext.set("file", mssqllocal)
     println "> Profile: " +db +"\n> Property file: "+ file
@@ -259,6 +264,7 @@ task restoreDumpDatabase << {
   }
 }
 restoreDumpDatabase.group = ANT_GROUP
+
 // wrapper
 task wrapper(type: Wrapper) {
     gradleVersion = '2.3'
